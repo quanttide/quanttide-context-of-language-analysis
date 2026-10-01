@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>english-sentence-analyzer · 长句分析 Demo</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --u1: #2563eb; --u1-bg: #eff6ff; --u1-ink: #1e40af;
+    --u2: #7c3aed; --u2-bg: #f5f3ff; --u2-ink: #5b21b6;
+    --u3: #059669; --u3-bg: #ecfdf5; --u3-ink: #065f46;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.7 "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 20px 40px; }
+
+  /* 顶栏 */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { display: inline-flex; width: 40px; height: 40px; border-radius: 10px; background: #111827; color: #fff; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  h1 { margin: 0; font: 700 17px/1.3 var(--mono); }
+  .sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .badge { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 4px 12px; font-size: 12px; white-space: nowrap; }
+
+  /* 流程条 */
+  .flow { display: flex; gap: 8px; align-items: stretch; margin-top: 16px; }
+  .flow .node { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+  .flow .no { font: 12px/1.4 var(--mono); color: var(--muted); }
+  .flow .nm { font-weight: 600; font-size: 14px; }
+  .flow .ds { font-size: 12px; color: var(--muted); }
+  .flow .arr { align-self: center; color: var(--muted); }
+
+  /* 区块 */
+  section.block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-top: 16px; }
+  .step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .step-no { font: 700 22px/1 var(--mono); color: #111827; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; }
+  .step-head h2 { margin: 0; font-size: 17px; }
+  .step-desc { color: var(--muted); font-size: 13px; }
+
+  /* 例句 */
+  .src { display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .src .tag { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 8px; color: var(--ink); }
+  .sentence { margin: 0; font: 16px/1.9 Georgia, "Times New Roman", serif; color: #111827; }
+  .meta { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+  /* 单元染色（嵌套） */
+  .u1 { background: var(--u1-bg); color: var(--u1-ink); }
+  .u2 { background: var(--u2-bg); color: var(--u2-ink); }
+  .u3 { background: var(--u3-bg); color: var(--u3-ink); }
+  .split { margin: 0; font: 16px/2.2 Georgia, "Times New Roman", serif; }
+  .mini { display: inline-block; font: 700 10px/1.5 var(--mono); color: #fff; border-radius: 4px; padding: 0 5px; margin-right: 5px; vertical-align: 2px; }
+  .mini.u1 { background: var(--u1); }
+  .mini.u2 { background: var(--u2); }
+  .mini.u3 { background: var(--u3); }
+
+  /* 拆分：关系与原则 */
+  .rels { margin-top: 14px; border-top: 1px dashed var(--line); }
+  .rel { display: flex; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+  .rel .pair { font: 600 13px var(--mono); color: #111827; min-width: 96px; }
+  .rel .type { border-radius: 999px; padding: 1px 10px; font-size: 12px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); white-space: nowrap; }
+  .rel .note { color: var(--muted); }
+  .principle { margin-top: 12px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-left: 3px solid #111827; border-radius: 6px; padding: 8px 12px; color: #374151; }
+  .principle b { font-weight: 600; color: #111827; }
+
+  /* 知识图谱 */
+  .kg-block { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 14px; }
+  .kg-block h3 { margin: 0 0 6px; font-size: 14px; }
+  .kg-desc { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  svg.kg { display: block; width: 100%; height: auto; }
+  svg.kg .n { stroke-width: 1.5; }
+  svg.kg .n1 { fill: var(--u1-bg); stroke: var(--u1); }
+  svg.kg .n2 { fill: var(--u2-bg); stroke: var(--u2); }
+  svg.kg .n3 { fill: var(--u3-bg); stroke: var(--u3); }
+  svg.kg .nt { fill: var(--ink); font: 600 14px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  svg.kg .e1 { stroke: var(--u1); stroke-width: 1.6; fill: none; }
+  svg.kg .e2 { stroke: var(--u2); stroke-width: 1.6; fill: none; stroke-dasharray: 6 4; }
+  svg.kg .e3 { stroke: var(--u3); stroke-width: 1.6; fill: none; }
+  svg.kg .e3.dash { stroke-dasharray: 6 4; }
+  svg.kg .el { fill: var(--muted); stroke: var(--card); stroke-width: 4; paint-order: stroke; font: 12px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .kg-rows { margin-top: 12px; }
+  .kg-row { display: grid; grid-template-columns: 44px 1.3fr 1.2fr 1.3fr; gap: 10px; align-items: baseline; font-size: 13px; padding: 6px 0; border-top: 1px dotted var(--line); }
+  .kg-row.head { color: var(--muted); font-size: 12px; border-top: none; }
+  .kg-row i { font-style: normal; color: var(--muted); }
+
+  /* 分析卡片 */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff; }
+  .card.c1 { border-top: 3px solid var(--u1); }
+  .card.c2 { border-top: 3px solid var(--u2); }
+  .card.c3 { border-top: 3px solid var(--u3); }
+  .card h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h3 .kind { color: var(--muted); font-weight: 400; font-size: 12px; }
+  .quote { font: 14px/1.7 Georgia, "Times New Roman", serif; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+  .c1 .quote { background: var(--u1-bg); color: var(--u1-ink); }
+  .c2 .quote { background: var(--u2-bg); color: var(--u2-ink); }
+  .c3 .quote { background: var(--u3-bg); color: var(--u3-ink); }
+  .row { display: flex; gap: 8px; font-size: 13px; padding: 5px 0; border-top: 1px dotted var(--line); }
+  .row .k { color: var(--muted); min-width: 52px; flex-shrink: 0; }
+  .row .v { flex: 1; }
+  .row .v code { font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  /* 整合 */
+  .merge { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .merge { grid-template-columns: 1fr; } .flow .ds { display: none; } }
+  .panel { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .panel h3 { margin: 0 0 8px; font-size: 14px; }
+  .panel .row { border-top: 1px dotted var(--line); }
+  .panel .row:first-of-type { border-top: none; }
+  .trans { font-size: 14px; line-height: 1.9; background: var(--bg); border-radius: 6px; padding: 10px 12px; }
+  .explain { font-size: 13px; color: #374151; line-height: 1.9; }
+
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <span class="logo">ESA</span>
+      <div>
+        <h1>english-sentence-analyzer</h1>
+        <p class="sub">英语长句分析工具 · UI Demo</p>
+      </div>
+    </div>
+    <span class="badge">静态演示 · 手工标注</span>
+  </header>
+
+  <div class="flow">
+    <div class="node">
+      <div class="no">STEP 01</div>
+      <div class="nm">拆分单句</div>
+      <div class="ds">按主谓结构拆出单元，登记嵌套关系</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="node">
+      <div class="no">STEP 02</div>
+      <div class="nm">分析单句</div>
+      <div class="ds">逐单元做结构、成分、语法点、词汇与中译</div>
+    </div>
+    <div class="arr">→</div>
+    <div class="node">
+      <div class="no">STEP 03</div>
+      <div class="nm">整合单句</div>
+      <div class="ds">按登记关系挂回原位，输出整句翻译与贯通解释</div>
+    </div>
+  </div>
+
+  <!-- 例句 -->
+  <section class="block">
+    <div class="src"><span class="tag">例句</span><span>考研英语（一）2008 · Text 2</span></div>
+    <p class="sentence">The Internet—and pressure from funding agencies, who are questioning why commercial publishers are making money from government-funded research by restricting access to it—is making access to scientific results a reality.</p>
+    <div class="meta">1 个长句 · 拆出 3 个主谓齐全的单元 · 2 层嵌套（定语从句套宾语从句）</div>
+  </section>
+
+  <!-- STEP 01 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">01</span>
+      <h2>拆分单句</h2>
+      <span class="step-desc">沿主谓结构拆分：每个单元主谓齐全、可独立分析，嵌套关系只登记不拆散</span>
+    </div>
+
+    <p class="split"><span class="u1"><span class="mini">U1</span>The Internet—and pressure from funding agencies,<span class="u2"><span class="mini">U2</span> who are questioning why<span class="u3"><span class="mini">U3</span> commercial publishers are making money from government-funded research by restricting access to it</span></span>—is making access to scientific results a reality.</span></p>
+
+    <div class="rels">
+      <div class="rel"><span class="pair">U1</span><span class="type">主干</span><span class="note">主谓齐全的主句；破折号内是并列主语的补充，嵌套的 U2 已抽出</span></div>
+      <div class="rel"><span class="pair">U2 ⊂ U1</span><span class="type">修饰</span><span class="note">非限制性定语从句，挂在 funding agencies 后，who 回指它</span></div>
+      <div class="rel"><span class="pair">U3 ⊂ U2</span><span class="type">嵌套</span><span class="note">why 宾语从句，作 U2 中 questioning 的宾语</span></div>
+    </div>
+    <div class="principle"><b>拆分原则：</b>只按主谓结构拆——拆出的每个单元都要有完整的主谓，能独立进入「分析单句」；谁嵌在谁里面只登记（⊂），不把单元切成主语、谓语之类的碎片。</div>
+
+    <div class="kg-block">
+      <h3>知识图谱分析</h3>
+      <p class="kg-desc">从拆出的单元提取实体与关系，按单元着色——图谱用来核对拆分是否保全句意，也是「整合单句」时的对照基准。</p>
+
+      <svg class="kg" viewBox="0 0 920 380" role="img" aria-label="例句知识图谱">
+        <defs>
+          <marker id="arr-u1" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#2563eb" /></marker>
+          <marker id="arr-u2" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#7c3aed" /></marker>
+          <marker id="arr-u3" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L9,4 L0,8 z" fill="#059669" /></marker>
+        </defs>
+
+        <!-- U1：两股力量 → 获取科研成果 -->
+        <line class="e1" x1="215" y1="95" x2="368" y2="170" marker-end="url(#arr-u1)" />
+        <text class="el" x="282" y="116" text-anchor="middle">使成为现实</text>
+        <line class="e1" x1="215" y1="285" x2="368" y2="212" marker-end="url(#arr-u1)" />
+        <text class="el" x="282" y="244" text-anchor="middle">施压推动</text>
+
+        <!-- U2：资助机构 质疑 商业出版商（绕到图上方） -->
+        <path class="e2" d="M130,265 C130,40 790,40 790,72" marker-end="url(#arr-u2)" />
+        <text class="el" x="460" y="52" text-anchor="middle">质疑（凭什么）</text>
+
+        <!-- U3：商业出版商 与 政府资助的研究 -->
+        <line class="e3" x1="772" y1="125" x2="772" y2="258" marker-end="url(#arr-u3)" />
+        <text class="el" x="762" y="196" text-anchor="end">限制获取</text>
+        <line class="e3" x1="808" y1="125" x2="808" y2="258" marker-end="url(#arr-u3)" />
+        <text class="el" x="818" y="196">从中牟利</text>
+        <line class="e3 dash" x1="702" y1="116" x2="552" y2="184" marker-end="url(#arr-u3)" />
+        <text class="el" x="622" y="140" text-anchor="middle">阻碍（推断）</text>
+
+        <!-- 节点 -->
+        <rect class="n n1" x="45" y="77" width="170" height="46" rx="8" />
+        <text class="nt" x="130" y="106" text-anchor="middle">互联网</text>
+        <rect class="n n1" x="45" y="267" width="170" height="46" rx="8" />
+        <text class="nt" x="130" y="296" text-anchor="middle">资助机构</text>
+        <rect class="n n1" x="375" y="167" width="170" height="46" rx="8" />
+        <text class="nt" x="460" y="196" text-anchor="middle">获取科研成果</text>
+        <rect class="n n3" x="705" y="77" width="170" height="46" rx="8" />
+        <text class="nt" x="790" y="106" text-anchor="middle">商业出版商</text>
+        <rect class="n n3" x="705" y="267" width="170" height="46" rx="8" />
+        <text class="nt" x="790" y="296" text-anchor="middle">政府资助的研究</text>
+      </svg>
+
+      <div class="legend">
+        <span><span class="dot" style="background: var(--u1)"></span>U1 主句实体与关系</span>
+        <span><span class="dot" style="background: var(--u2)"></span>U2 定语从句关系</span>
+        <span><span class="dot" style="background: var(--u3)"></span>U3 宾语从句实体与关系</span>
+        <span>虚线箭头：从句内关系或推断（句中未明说）</span>
+      </div>
+
+      <div class="kg-rows">
+        <div class="kg-row head"><span>单元</span><span>主语</span><span>关系</span><span>客体</span></div>
+        <div class="kg-row"><span><span class="mini u1">U1</span></span><span>互联网</span><i>使成为现实</i><span>获取科研成果</span></div>
+        <div class="kg-row"><span><span class="mini u1">U1</span></span><span>资助机构（的压力）</span><i>施压推动</i><span>获取科研成果</span></div>
+        <div class="kg-row"><span><span class="mini u2">U2</span></span><span>资助机构</span><i>质疑（凭什么）</i><span>商业出版商牟利（即 U3）</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>限制获取</i><span>政府资助的研究</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>从中牟利</i><span>政府资助的研究</span></div>
+        <div class="kg-row"><span><span class="mini u3">U3</span></span><span>商业出版商</span><i>阻碍（推断）</i><span>获取科研成果</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 02 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">02</span>
+      <h2>分析单句</h2>
+      <span class="step-desc">对每个拆出的单元独立分析，本步不处理单元之间的衔接</span>
+    </div>
+
+    <div class="cards">
+      <div class="card c1">
+        <h3><span class="mini u1">U1</span>主句 · 主干</h3>
+        <div class="quote">The Internet—and pressure from funding agencies—is making access to scientific results a reality.</div>
+        <div class="row"><span class="k">成分</span><span class="v"><code>S</code> The Internet and pressure from funding agencies（破折号内为并列主语的补充）+ <code>V</code> is making + <code>O</code> access to scientific results + <code>OC</code> a reality</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">make + 宾语 + 宾语补足语（使……成为……）；主语带并列与插入补充，谓语被隔开</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">互联网——以及来自资助机构的压力——正在让获取科研成果成为现实</span></div>
+      </div>
+
+      <div class="card c2">
+        <h3><span class="mini u2">U2</span>非限制性定语从句 <span class="kind">⊂ U1</span></h3>
+        <div class="quote">who are questioning why commercial publishers are making money from government-funded research by restricting access to it</div>
+        <div class="row"><span class="k">成分</span><span class="v"><code>who</code>(S) + <code>are questioning</code>(V) + U3(O)；主谓齐全，可独立分析</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">非限制性定语从句，挂在 funding agencies 后，who = funding agencies；内嵌 why 宾语从句（已抽出为 U3）</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">这些机构一直在质疑：商业出版商凭什么靠限制人们获取成果，从政府资助的研究中赚钱</span></div>
+      </div>
+
+      <div class="card c3">
+        <h3><span class="mini u3">U3</span>宾语从句 <span class="kind">⊂ U2</span></h3>
+        <div class="quote">why commercial publishers are making money from government-funded research by restricting access to it</div>
+        <div class="row"><span class="k">成分</span><span class="v"><code>why</code>(引导词) + <code>commercial publishers</code>(S) + <code>are making money</code>(V) + <code>from government-funded research</code>(来源状语) + <code>by restricting access to it</code>(方式状语)</span></div>
+        <div class="row"><span class="k">语法点</span><span class="v">主谓齐全；by + doing 表方式；why 是质问语气（凭什么）；作 U2 中 questioning 的宾语</span></div>
+        <div class="row"><span class="k">关键词</span><span class="v"><code>make money from</code> 从……牟利；<code>restrict access to</code> 限制对……的获取</span></div>
+        <div class="row"><span class="k">中译</span><span class="v">商业出版商凭什么靠限制人们获取成果，从政府资助的研究中赚钱</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 03 -->
+  <section class="block">
+    <div class="step-head">
+      <span class="step-no">03</span>
+      <h2>整合单句</h2>
+      <span class="step-desc">按登记的关系把单元挂回原位，恢复连接与指代，贯通句意</span>
+    </div>
+
+    <div class="merge">
+      <div class="panel">
+        <h3>还原与衔接</h3>
+        <div class="row"><span class="k">连接</span><span class="v">U2 挂回 U1 主语的 funding agencies 之后，U3 挂回 U2 的 questioning 之后，三层拼回完整长句</span></div>
+        <div class="row"><span class="k">指代</span><span class="v"><code>who</code> → funding agencies（U1）；<code>it</code> → government-funded research（U3 内）</span></div>
+        <div class="row"><span class="k">逻辑</span><span class="v">U1 陈述结果（互联网使获取成为现实），U2 补充阻力来源（资助机构的质疑），U3 是质疑的内容（出版商靠限制访问牟利）</span></div>
+        <div class="row"><span class="k">语气</span><span class="v"><code>why</code> 是质问（凭什么）而非询问，带着资助机构对出版商的不满</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>句意</h3>
+        <div class="trans">互联网与资助机构的施压，正在让获取科研成果成为现实。</div>
+        <h3 style="margin-top: 12px;">整句翻译 · 直译（保留插入结构）</h3>
+        <div class="trans">互联网——以及来自资助机构的压力（这些机构质疑：商业出版商凭什么靠限制人们获取，从政府资助的研究中赚钱）——正在让获取科研成果成为现实。</div>
+        <h3 style="margin-top: 12px;">通顺版（按汉语语序重排）</h3>
+        <div class="trans">互联网和资助机构的施压，正在让人人都能获取科研成果成为现实。资助机构之所以施压，是因为他们质疑：研究是政府出钱做的，凭什么商业出版商把成果锁起来、靠限制获取来赚钱？</div>
+        <h3 style="margin-top: 12px;">贯通解释</h3>
+        <div class="explain">句意是「两股力量推动科研成果的开放获取」：互联网（技术上免费分发）+ 资助机构的施压（政策上问责）。插入语解释压力从哪来——资助机构质疑商业出版商凭什么从政府资助的研究中赚钱，手段正是限制获取（付费墙）。who 回指 funding agencies，it 回指 government-funded research。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>静态演示：以上标注均为手工预置，页面未接入任何分析逻辑，输入与交互尚未实现。</footer>
+
+</div>
+</body>
+</html>
