@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "考研英语（一）2008 · Text 2 长句",
+    "source": "考研英语（一）2008 · Text 2",
+    "sentence": "The Internet—and pressure from funding agencies, who are questioning why commercial publishers are making money from government-funded research by restricting access to it—is making access to scientific results a reality."
+  },
+  "units": [
+    {
+      "id": "U1",
+      "type": "主干",
+      "parent": "",
+      "text": "The Internet—and pressure from funding agencies—is making access to scientific results a reality.",
+      "analysis": {
+        "成分": "S The Internet and pressure from funding agencies（破折号内为并列主语的补充）+ V is making + O access to scientific results + OC a reality",
+        "语法点": "make + 宾语 + 宾语补足语（使……成为……）；主语带并列与插入补充，谓语被隔开",
+        "关键词": "",
+        "中译": "互联网——以及来自资助机构的压力——正在让获取科研成果成为现实"
+      }
+    },
+    {
+      "id": "U2",
+      "type": "修饰",
+      "parent": "U1",
+      "text": "who are questioning why commercial publishers are making money from government-funded research by restricting access to it",
+      "analysis": {
+        "成分": "who(S) + are questioning(V) + U3(O)；主谓齐全，可独立分析",
+        "语法点": "非限制性定语从句，挂在 funding agencies 后，who = funding agencies；内嵌 why 宾语从句（已抽出为 U3）",
+        "关键词": "",
+        "中译": "这些机构一直在质疑：商业出版商凭什么靠限制人们获取成果，从政府资助的研究中赚钱"
+      }
+    },
+    {
+      "id": "U3",
+      "type": "嵌套",
+      "parent": "U2",
+      "text": "why commercial publishers are making money from government-funded research by restricting access to it",
+      "analysis": {
+        "成分": "why(引导词) + commercial publishers(S) + are making money(V) + from government-funded research(来源状语) + by restricting access to it(方式状语)",
+        "语法点": "主谓齐全；by + doing 表方式；why 是质问语气（凭什么）；作 U2 中 questioning 的宾语",
+        "关键词": "make money from 从……牟利；restrict access to 限制对……的获取",
+        "中译": "商业出版商凭什么靠限制人们获取成果，从政府资助的研究中赚钱"
+      }
+    }
+  ],
+  "merge": {
+    "连接": "U2 挂回 U1 主语的 funding agencies 之后，U3 挂回 U2 的 questioning 之后，三层拼回完整长句",
+    "指代": "who → funding agencies（U1）；it → government-funded research（U3 内）",
+    "逻辑": "U1 陈述结果（互联网使获取成为现实），U2 补充阻力来源（资助机构的质疑），U3 是质疑的内容（出版商靠限制访问牟利）",
+    "语气": "why 是质问（凭什么）而非询问，带着资助机构对出版商的不满",
+    "句意": "互联网与资助机构的施压，正在让获取科研成果成为现实。",
+    "直译": "互联网——以及来自资助机构的压力（这些机构质疑：商业出版商凭什么靠限制人们获取，从政府资助的研究中赚钱）——正在让获取科研成果成为现实。",
+    "通顺版": "互联网和资助机构的施压，正在让人人都能获取科研成果成为现实。资助机构之所以施压，是因为他们质疑：研究是政府出钱做的，凭什么商业出版商把成果锁起来、靠限制获取来赚钱？",
+    "贯通解释": "句意是「两股力量推动科研成果的开放获取」：互联网（技术上免费分发）+ 资助机构的施压（政策上问责）。插入语解释压力从哪来——资助机构质疑商业出版商凭什么从政府资助的研究中赚钱，手段正是限制获取（付费墙）。who 回指 funding agencies，it 回指 government-funded research。"
+  },
+  "kg": [
+    { "unit": "U1", "subject": "互联网", "relation": "使成为现实", "object": "获取科研成果" },
+    { "unit": "U1", "subject": "资助机构（的压力）", "relation": "施压推动", "object": "获取科研成果" },
+    { "unit": "U2", "subject": "资助机构", "relation": "质疑（凭什么）", "object": "商业出版商牟利（即 U3）" },
+    { "unit": "U3", "subject": "商业出版商", "relation": "限制获取", "object": "政府资助的研究" },
+    { "unit": "U3", "subject": "商业出版商", "relation": "从中牟利", "object": "政府资助的研究" },
+    { "unit": "U3", "subject": "商业出版商", "relation": "阻碍（推断）", "object": "获取科研成果" }
+  ]
+}
